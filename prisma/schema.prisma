@@ -1,0 +1,146 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model AdminUser {
+  id           Int      @id @default(autoincrement())
+  name         String
+  email        String   @unique
+  passwordHash String
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  createdEvents Event[] @relation("EventCreatedBy")
+
+  @@index([email])
+}
+
+model Event {
+  id          Int           @id @default(autoincrement())
+  slug        String        @unique
+  title       String
+  description String?       @db.Text
+  imageUrl    String?
+  category    EventCategory
+  status      EventStatus   @default(DRAFT)
+  createdById Int
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  createdBy   AdminUser     @relation("EventCreatedBy", fields: [createdById], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  sessions    EventSession[]
+
+  @@index([slug])
+  @@index([status])
+  @@index([category])
+  @@index([createdById])
+}
+
+model EventSession {
+  id         Int           @id @default(autoincrement())
+  eventId    Int
+  venueName  String
+  startsAt   DateTime
+  status     SessionStatus @default(SCHEDULED)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  event       Event        @relation(fields: [eventId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  ticketTypes TicketType[]
+  orders      Order[]
+
+  @@index([eventId])
+  @@index([startsAt])
+  @@index([status])
+}
+
+model TicketType {
+  id             Int          @id @default(autoincrement())
+  sessionId      Int
+  name           String
+  description    String?      @db.VarChar(255)
+  price          Decimal      @db.Decimal(10,2)
+  stockTotal     Int
+  stockSold      Int          @default(0)
+  maxPerPurchase Int?
+  isActive       Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  session     EventSession @relation(fields: [sessionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  orderItems  OrderItem[]
+
+  @@index([sessionId])
+  @@index([isActive])
+}
+
+model Order {
+  id           Int          @id @default(autoincrement())
+  sessionId    Int
+  buyerName    String
+  buyerEmail   String
+  totalAmount  Decimal      @db.Decimal(10,2)
+  status       OrderStatus  @default(PENDING)
+
+  // soporte de reembolsos
+  refundReason String?      @db.VarChar(255)
+  refundedAt   DateTime?
+
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  session      EventSession @relation(fields: [sessionId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  items        OrderItem[]
+
+  @@index([sessionId])
+  @@index([buyerEmail])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id           Int        @id @default(autoincrement())
+  orderId      Int
+  ticketTypeId Int
+  quantity     Int
+  unitPrice    Decimal    @db.Decimal(10,2)
+  subtotal     Decimal    @db.Decimal(10,2)
+
+  order        Order      @relation(fields: [orderId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  ticketType   TicketType @relation(fields: [ticketTypeId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([orderId])
+  @@index([ticketTypeId])
+}
+
+enum EventCategory {
+  CONCERT
+  SHOW
+  THEATER
+}
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  CANCELLED
+}
+
+enum SessionStatus {
+  SCHEDULED
+  SOLD_OUT
+  CANCELLED
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  REFUND_PENDING
+  REFUNDED
+}
