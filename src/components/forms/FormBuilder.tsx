@@ -21,8 +21,8 @@ function renderField(
   onChange: (name: string, value: string | number | boolean) => void
 ) {
   const baseInputClass =
-    "w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-black";
-  const errorClass = error ? "border-red-500" : "";
+    "w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100";
+  const errorClass = error ? "border-rose-300 focus:border-rose-300 focus:ring-rose-100" : "";
 
   switch (field.type) {
     case "text":
@@ -121,18 +121,18 @@ export default function FormBuilder({
 
         return (
           <div key={field.name} className="space-y-2">
-            <label htmlFor={field.name} className="block text-sm font-medium">
+            <label htmlFor={field.name} className="block text-sm font-medium text-slate-800">
               {field.label}
               {field.required ? " *" : ""}
             </label>
 
             {field.description && (
-              <p className="text-sm text-gray-500">{field.description}</p>
+              <p className="text-sm text-slate-500">{field.description}</p>
             )}
 
             {renderField(field, values[field.name], error, onChange)}
 
-            {error && <p className="text-sm text-red-600">{error}</p>}
+            {error && <p className="text-sm text-rose-600">{error}</p>}
           </div>
         );
       })}
@@ -141,7 +141,7 @@ export default function FormBuilder({
         <button
           type="submit"
           disabled={isSubmitting}
-          className="rounded-lg bg-black px-4 py-2 text-white disabled:opacity-60"
+          className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isSubmitting ? "Guardando..." : submitLabel}
         </button>

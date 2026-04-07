@@ -189,3 +189,20 @@ export async function cancelEventAction(eventId: number) {
   revalidatePath("/admin/eventos");
   redirect("/admin/eventos?success=cancelled");
 }
+
+export async function reactivateEventAction(eventId: number) {
+  try {
+    await prisma.event.update({
+      where: { id: eventId },
+      data: {
+        status: "DRAFT",
+      },
+    });
+  } catch (error) {
+    console.error("Error al reactivar evento:", error);
+    redirect("/admin/eventos?error=reactivate");
+  }
+
+  revalidatePath("/admin/eventos");
+  redirect("/admin/eventos?success=reactivated");
+}

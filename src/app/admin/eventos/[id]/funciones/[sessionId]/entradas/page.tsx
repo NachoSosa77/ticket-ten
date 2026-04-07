@@ -83,41 +83,83 @@ export default async function TicketTypesPage({
     notFound();
   }
 
+  const totalStock = session.ticketTypes.reduce(
+    (acc, ticketType) => acc + ticketType.stockTotal,
+    0,
+  );
+  const totalSold = session.ticketTypes.reduce(
+    (acc, ticketType) => acc + ticketType.stockSold,
+    0,
+  );
+
   return (
-    <div className="space-y-6">
-      <div>
-        <Link
-          href={`/admin/eventos/${event.id}/funciones`}
-          className="text-sm text-gray-500 hover:text-gray-700"
-        >
-          ← Volver a funciones
-        </Link>
+    <div className="space-y-8">
+      <section className="relative overflow-hidden rounded-3xl border border-indigo-200/70 bg-gradient-to-br from-slate-900 via-indigo-900 to-violet-800 p-8 text-white shadow-xl">
+        <div className="pointer-events-none absolute -right-12 -top-12 h-44 w-44 rounded-full bg-white/10 blur-2xl" />
+        <div className="pointer-events-none absolute -bottom-16 -left-10 h-48 w-48 rounded-full bg-fuchsia-300/20 blur-3xl" />
 
-        <h1 className="mt-2 text-2xl font-semibold">Entradas de la función</h1>
-        <p className="text-sm text-gray-500">
-          {event.title} · {formatEventDateTime(session.startsAt)} ·{" "}
-          {session.venueName}
-        </p>
-      </div>
+        <div className="relative flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+          <div className="max-w-2xl space-y-3">
+            <Link
+              href={`/admin/eventos/${event.id}/funciones`}
+              className="inline-flex w-fit items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium tracking-wide text-indigo-50 transition hover:bg-white/20"
+            >
+              ← Volver a funciones
+            </Link>
 
-      <div className="flex justify-end">
-        <Link
-          href={`/admin/eventos/${event.id}/funciones/${session.id}/entradas/nueva`}
-          className="rounded-lg bg-black px-4 py-2 text-white"
-        >
-          Nueva entrada
-        </Link>
-      </div>
+            <span className="inline-flex w-fit items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium tracking-wide">
+              ⚡ Gestión de entradas
+            </span>
+
+            <h1 className="text-3xl font-semibold leading-tight md:text-4xl">
+              Entradas de la función
+            </h1>
+            <p className="text-sm text-indigo-100 md:text-base">
+              {event.title} · {formatEventDateTime(session.startsAt)} · {session.venueName}
+            </p>
+          </div>
+
+          <Link
+            href={`/admin/eventos/${event.id}/funciones/${session.id}/entradas/nueva`}
+            className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-indigo-900 transition hover:bg-indigo-50"
+          >
+            Nueva entrada
+          </Link>
+        </div>
+      </section>
+
+      <section className="grid gap-4 sm:grid-cols-3">
+        <article className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+          <p className="text-sm text-gray-600">Tipos de entrada</p>
+          <p className="mt-2 text-2xl font-semibold tracking-tight text-gray-900">
+            {session.ticketTypes.length}
+          </p>
+        </article>
+
+        <article className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+          <p className="text-sm text-gray-600">Stock total</p>
+          <p className="mt-2 text-2xl font-semibold tracking-tight text-gray-900">
+            {totalStock}
+          </p>
+        </article>
+
+        <article className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+          <p className="text-sm text-gray-600">Entradas vendidas</p>
+          <p className="mt-2 text-2xl font-semibold tracking-tight text-gray-900">
+            {totalSold}
+          </p>
+        </article>
+      </section>
 
       {successMessage && (
-        <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 shadow-sm">
           {successMessage}
         </div>
       )}
 
-      <div className="overflow-hidden rounded-2xl border bg-white">
+      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
         <table className="w-full text-sm">
-          <thead className="border-b bg-gray-50 text-left">
+          <thead className="border-b border-gray-200 bg-gradient-to-r from-white to-gray-50 text-left text-slate-700">
             <tr>
               <th className="px-4 py-3 font-medium">Nombre</th>
               <th className="px-4 py-3 font-medium">Descripción</th>
@@ -133,15 +175,18 @@ export default async function TicketTypesPage({
           <tbody>
             {session.ticketTypes.length === 0 ? (
               <tr>
-                <td colSpan={8} className="px-4 py-6 text-center text-gray-500">
+                <td colSpan={8} className="px-4 py-6 text-center text-slate-500">
                   Esta función todavía no tiene tipos de entrada cargados.
                 </td>
               </tr>
             ) : (
               session.ticketTypes.map((ticketType) => (
-                <tr key={ticketType.id} className="border-b last:border-b-0">
+                <tr
+                  key={ticketType.id}
+                  className="border-b border-slate-100 text-slate-800 transition hover:bg-indigo-50/30 last:border-b-0"
+                >
                   <td className="px-4 py-3">{ticketType.name}</td>
-                  <td className="px-4 py-3 text-gray-600">
+                  <td className="px-4 py-3 text-slate-500">
                     {ticketType.description || "—"}
                   </td>
                   <td className="px-4 py-3">
@@ -154,17 +199,17 @@ export default async function TicketTypesPage({
                   </td>
                   <td className="px-4 py-3">
                     <span
-                      className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
+                      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
                         ticketType.isActive
-                          ? "bg-green-100 text-green-800"
-                          : "bg-gray-100 text-gray-700"
+                          ? "border border-emerald-200 bg-emerald-50 text-emerald-800"
+                          : "border border-slate-200 bg-slate-100 text-slate-700"
                       }`}
                     >
                       {ticketType.isActive ? "Sí" : "No"}
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    <span className="text-sm text-gray-400">Próximamente</span>
+                    <span className="text-sm text-slate-400">Próximamente</span>
                   </td>
                 </tr>
               ))

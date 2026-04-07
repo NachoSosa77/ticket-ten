@@ -51,7 +51,7 @@ export default function EventSessionStatusActions({
         type="button"
         onClick={handleReactivate}
         disabled={isPending}
-        className="rounded-md bg-green-600 px-3 py-1.5 text-sm text-white cursor-pointer transition hover:scale-105 hover:bg-green-700 disabled:opacity-60"
+        className="cursor-pointer rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-700 transition hover:-translate-y-0.5 hover:border-emerald-300 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {isPending ? "Procesando..." : "Reactivar"}
       </button>
@@ -63,7 +63,7 @@ export default function EventSessionStatusActions({
       type="button"
       onClick={handleCancel}
       disabled={isPending}
-      className="rounded-md bg-red-600 px-3 py-1.5 text-sm text-white cursor-pointer transition hover:scale-105 hover:bg-red-700 disabled:opacity-60"
+      className="cursor-pointer rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-sm font-medium text-rose-700 transition hover:-translate-y-0.5 hover:border-rose-300 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
     >
       {isPending ? "Procesando..." : "Cancelar"}
     </button>

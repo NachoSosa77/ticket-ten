@@ -38,13 +38,21 @@ export async function createEventSessionAction(
 
   const event = await prisma.event.findUnique({
     where: { id: eventId },
-    select: { id: true },
+    select: { id: true, status: true },
   });
 
   if (!event) {
     return {
       success: false,
       message: "El evento no existe.",
+    };
+  }
+
+  if (event.status === "CANCELLED") {
+    return {
+      success: false,
+      message:
+        "No se pueden agregar funciones a un evento cancelado. Reactiva el evento para continuar.",
     };
   }
 
