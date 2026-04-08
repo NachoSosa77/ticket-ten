@@ -17,8 +17,50 @@ model AdminUser {
   updatedAt    DateTime @updatedAt
 
   createdEvents Event[] @relation("EventCreatedBy")
+  sessions      AdminSession[]
 
   @@index([email])
+}
+
+model AdminSession {
+  id          Int      @id @default(autoincrement())
+  adminUserId Int
+  tokenHash   String   @unique
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+
+  adminUser AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([adminUserId])
+  @@index([expiresAt])
+}
+
+model BuyerUser {
+  id           Int      @id @default(autoincrement())
+  name         String
+  email        String   @unique
+  passwordHash String
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  orders   Order[]
+  sessions BuyerSession[]
+
+  @@index([email])
+}
+
+model BuyerSession {
+  id          Int      @id @default(autoincrement())
+  buyerUserId Int
+  tokenHash   String   @unique
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+
+  buyerUser BuyerUser @relation(fields: [buyerUserId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([buyerUserId])
+  @@index([expiresAt])
 }
 
 model Event {
@@ -82,7 +124,9 @@ model TicketType {
 
 model Order {
   id           Int          @id @default(autoincrement())
+  orderCode    String?      @unique @db.VarChar(32)
   sessionId    Int
+  buyerUserId  Int?
   buyerName    String
   buyerEmail   String
   totalAmount  Decimal      @db.Decimal(10,2)
@@ -96,9 +140,11 @@ model Order {
   updatedAt    DateTime     @updatedAt
 
   session      EventSession @relation(fields: [sessionId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  buyerUser    BuyerUser?   @relation(fields: [buyerUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   items        OrderItem[]
 
   @@index([sessionId])
+  @@index([buyerUserId])
   @@index([buyerEmail])
   @@index([status])
   @@index([createdAt])

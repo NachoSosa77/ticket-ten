@@ -1,3 +1,5 @@
+import { logoutAdminAction } from "@/app/actions/admin-auth.actions";
+import { requireAdminUser } from "@/lib/auth/session";
 import Link from "next/link";
 
 const navigation = [
@@ -15,11 +17,13 @@ const navigation = [
   },
 ];
 
-export default function AdminLayout({
+export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const adminUser = await requireAdminUser("/admin");
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-100 via-indigo-50/50 to-white text-slate-900">
       <div className="mx-auto flex w-full max-w-[1600px]">
@@ -31,6 +35,9 @@ export default function AdminLayout({
             <h1 className="mt-2 text-xl font-semibold">Ticketera Admin</h1>
             <p className="mt-2 text-sm text-indigo-100/90">
               Operá eventos, funciones y entradas desde una única consola.
+            </p>
+            <p className="mt-3 text-xs text-indigo-100/80">
+              Sesión: <span className="font-semibold">{adminUser.email}</span>
             </p>
           </div>
 
@@ -55,6 +62,16 @@ export default function AdminLayout({
               </Link>
             ))}
           </nav>
+
+          <form action={logoutAdminAction} className="mt-6">
+            <input type="hidden" name="next" value="/auth/admin/ingresar" />
+            <button
+              type="submit"
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-400 hover:bg-slate-50"
+            >
+              Cerrar sesión admin
+            </button>
+          </form>
         </aside>
 
         <main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8">{children}</main>

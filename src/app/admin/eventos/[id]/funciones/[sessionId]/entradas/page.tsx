@@ -119,12 +119,21 @@ export default async function TicketTypesPage({
             </p>
           </div>
 
-          <Link
-            href={`/admin/eventos/${event.id}/funciones/${session.id}/entradas/nueva`}
-            className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-indigo-900 transition hover:bg-indigo-50"
-          >
-            Nueva entrada
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link
+              href={`/admin/eventos/${event.id}/funciones/${session.id}/ordenes`}
+              className="rounded-xl border border-white/30 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/20"
+            >
+              Ver órdenes
+            </Link>
+
+            <Link
+              href={`/admin/eventos/${event.id}/funciones/${session.id}/entradas/nueva`}
+              className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-indigo-900 transition hover:bg-indigo-50"
+            >
+              Nueva entrada
+            </Link>
+          </div>
         </div>
       </section>
 

@@ -37,6 +37,30 @@ function renderField(
         />
       );
 
+    case "email":
+      return (
+        <input
+          id={field.name}
+          type="email"
+          className={`${baseInputClass} ${errorClass}`}
+          placeholder={field.placeholder}
+          value={String(value ?? "")}
+          onChange={(e) => onChange(field.name, e.target.value)}
+        />
+      );
+
+    case "password":
+      return (
+        <input
+          id={field.name}
+          type="password"
+          className={`${baseInputClass} ${errorClass}`}
+          placeholder={field.placeholder}
+          value={String(value ?? "")}
+          onChange={(e) => onChange(field.name, e.target.value)}
+        />
+      );
+
     case "textarea":
       return (
         <textarea
