@@ -1,4 +1,6 @@
 import EventStatusActions from "@/features/events/components/EventStatusActions";
+import { requireAdminUser } from "@/lib/auth/session";
+import { formatEventDate } from "@/lib/datetime";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 
@@ -34,6 +36,8 @@ function getSuccessMessage(success?: string) {
 
 function getErrorMessage(error?: string) {
   switch (error) {
+    case "forbidden":
+      return "No tienes permisos para operar este evento.";
     case "publish":
       return "No se pudo publicar el evento.";
     case "cancel":
@@ -50,11 +54,15 @@ type EventosPageProps = {
 };
 
 export default async function EventosPage({ searchParams }: EventosPageProps) {
+  const adminUser = await requireAdminUser("/admin/eventos");
   const { success, error } = await searchParams;
   const successMessage = getSuccessMessage(success);
   const errorMessage = getErrorMessage(error);
 
   const events = await prisma.event.findMany({
+    where: {
+      createdById: adminUser.id,
+    },
     orderBy: {
       createdAt: "desc",
     },
@@ -65,6 +73,12 @@ export default async function EventosPage({ searchParams }: EventosPageProps) {
       category: true,
       status: true,
       createdAt: true,
+      createdBy: {
+        select: {
+          name: true,
+          email: true,
+        },
+      },
     },
   });
 
@@ -141,6 +155,7 @@ export default async function EventosPage({ searchParams }: EventosPageProps) {
               <th className="px-4 py-3 font-medium">Slug</th>
               <th className="px-4 py-3 font-medium">Categoría</th>
               <th className="px-4 py-3 font-medium">Estado</th>
+              <th className="px-4 py-3 font-medium">Creador</th>
               <th className="px-4 py-3 font-medium">Creado</th>
               <th className="px-4 py-3 font-medium">Acciones</th>
             </tr>
@@ -149,7 +164,7 @@ export default async function EventosPage({ searchParams }: EventosPageProps) {
           <tbody>
             {events.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-6 text-center text-slate-500">
+                <td colSpan={7} className="px-4 py-6 text-center text-slate-500">
                   No hay eventos cargados todavía.
                 </td>
               </tr>
@@ -172,7 +187,11 @@ export default async function EventosPage({ searchParams }: EventosPageProps) {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-slate-500">
-                    {new Date(event.createdAt).toLocaleDateString("es-AR")}
+                    <p className="text-slate-700">{event.createdBy.name}</p>
+                    <p className="text-xs">{event.createdBy.email}</p>
+                  </td>
+                  <td className="px-4 py-3 text-slate-500">
+                    {formatEventDate(event.createdAt)}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">

@@ -1,6 +1,7 @@
 "use server";
 
 import { ticketTypeFormSchema } from "@/features/events/forms/ticketTypeForm.schema";
+import { requireAdminUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -16,6 +17,10 @@ export async function createTicketTypeAction(
   sessionId: number,
   formData: FormData,
 ): Promise<CreateTicketTypeActionState> {
+  const adminUser = await requireAdminUser(
+    `/admin/eventos/${eventId}/funciones/${sessionId}/entradas/nueva`,
+  );
+
   const rawData = {
     name: formData.get("name"),
     description: formData.get("description"),
@@ -48,6 +53,7 @@ export async function createTicketTypeAction(
     where: {
       id: sessionId,
       eventId,
+      createdById: adminUser.id,
     },
     select: {
       id: true,

@@ -17,6 +17,7 @@ model AdminUser {
   updatedAt    DateTime @updatedAt
 
   createdEvents Event[] @relation("EventCreatedBy")
+  createdSessions EventSession[] @relation("EventSessionCreatedBy")
   sessions      AdminSession[]
 
   @@index([email])
@@ -87,6 +88,7 @@ model Event {
 model EventSession {
   id         Int           @id @default(autoincrement())
   eventId    Int
+  createdById Int
   venueName  String
   startsAt   DateTime
   status     SessionStatus @default(SCHEDULED)
@@ -94,10 +96,12 @@ model EventSession {
   updatedAt  DateTime      @updatedAt
 
   event       Event        @relation(fields: [eventId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  createdBy   AdminUser    @relation("EventSessionCreatedBy", fields: [createdById], references: [id], onDelete: Restrict, onUpdate: Cascade)
   ticketTypes TicketType[]
   orders      Order[]
 
   @@index([eventId])
+  @@index([createdById])
   @@index([startsAt])
   @@index([status])
 }

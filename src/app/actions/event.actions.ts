@@ -1,6 +1,7 @@
 "use server";
 
 import { eventFormSchema } from "@/features/events/forms/eventForm.schema";
+import { requireAdminUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -15,6 +16,8 @@ export async function createEventAction(
   _prevState: CreateEventActionState,
   formData: FormData,
 ): Promise<CreateEventActionState> {
+  const adminUser = await requireAdminUser("/admin/eventos/nuevo");
+
   const rawData = {
     title: formData.get("title"),
     slug: formData.get("slug"),
@@ -65,7 +68,7 @@ export async function createEventAction(
         imageUrl: parsed.data.imageUrl || null,
         category: parsed.data.category,
         status: "DRAFT",
-        createdById: 1,
+        createdById: adminUser.id,
       },
     });
   } catch (error) {
@@ -85,6 +88,8 @@ export async function updateEventAction(
   eventId: number,
   formData: FormData,
 ): Promise<CreateEventActionState> {
+  const adminUser = await requireAdminUser(`/admin/eventos/${eventId}/editar`);
+
   const rawData = {
     title: formData.get("title"),
     slug: formData.get("slug"),
@@ -112,6 +117,23 @@ export async function updateEventAction(
   }
 
   try {
+    const ownEvent = await prisma.event.findFirst({
+      where: {
+        id: eventId,
+        createdById: adminUser.id,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (!ownEvent) {
+      return {
+        success: false,
+        message: "No tienes permisos para editar este evento.",
+      };
+    }
+
     const existingEvent = await prisma.event.findFirst({
       where: {
         slug: parsed.data.slug,
@@ -157,16 +179,25 @@ export async function updateEventAction(
 }
 
 export async function publishEventAction(eventId: number) {
+  const adminUser = await requireAdminUser("/admin/eventos");
+  let forbidden = false;
+
   try {
-    await prisma.event.update({
-      where: { id: eventId },
+    const updated = await prisma.event.updateMany({
+      where: { id: eventId, createdById: adminUser.id },
       data: {
         status: "PUBLISHED",
       },
     });
+
+    forbidden = updated.count !== 1;
   } catch (error) {
     console.error("Error al publicar evento:", error);
     redirect("/admin/eventos?error=publish");
+  }
+
+  if (forbidden) {
+    redirect("/admin/eventos?error=forbidden");
   }
 
   revalidatePath("/admin/eventos");
@@ -174,16 +205,25 @@ export async function publishEventAction(eventId: number) {
 }
 
 export async function cancelEventAction(eventId: number) {
+  const adminUser = await requireAdminUser("/admin/eventos");
+  let forbidden = false;
+
   try {
-    await prisma.event.update({
-      where: { id: eventId },
+    const updated = await prisma.event.updateMany({
+      where: { id: eventId, createdById: adminUser.id },
       data: {
         status: "CANCELLED",
       },
     });
+
+    forbidden = updated.count !== 1;
   } catch (error) {
     console.error("Error al cancelar evento:", error);
     redirect("/admin/eventos?error=cancel");
+  }
+
+  if (forbidden) {
+    redirect("/admin/eventos?error=forbidden");
   }
 
   revalidatePath("/admin/eventos");
@@ -191,16 +231,25 @@ export async function cancelEventAction(eventId: number) {
 }
 
 export async function reactivateEventAction(eventId: number) {
+  const adminUser = await requireAdminUser("/admin/eventos");
+  let forbidden = false;
+
   try {
-    await prisma.event.update({
-      where: { id: eventId },
+    const updated = await prisma.event.updateMany({
+      where: { id: eventId, createdById: adminUser.id },
       data: {
         status: "DRAFT",
       },
     });
+
+    forbidden = updated.count !== 1;
   } catch (error) {
     console.error("Error al reactivar evento:", error);
     redirect("/admin/eventos?error=reactivate");
+  }
+
+  if (forbidden) {
+    redirect("/admin/eventos?error=forbidden");
   }
 
   revalidatePath("/admin/eventos");

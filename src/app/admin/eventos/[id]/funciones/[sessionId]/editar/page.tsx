@@ -1,4 +1,5 @@
 import EventSessionEditForm from "@/features/events/forms/EventSessionEditForm";
+import { requireAdminUser } from "@/lib/auth/session";
 import { formatDateTimeLocal } from "@/lib/datetime";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
@@ -9,6 +10,7 @@ type PageProps = {
 };
 
 export default async function EditEventSessionPage({ params }: PageProps) {
+  const adminUser = await requireAdminUser("/admin/eventos");
   const { id, sessionId } = await params;
 
   const eventId = Number(id);
@@ -18,8 +20,8 @@ export default async function EditEventSessionPage({ params }: PageProps) {
     notFound();
   }
 
-  const event = await prisma.event.findUnique({
-    where: { id: eventId },
+  const event = await prisma.event.findFirst({
+    where: { id: eventId, createdById: adminUser.id },
     select: {
       id: true,
       title: true,
@@ -35,6 +37,7 @@ export default async function EditEventSessionPage({ params }: PageProps) {
     where: {
       id: parsedSessionId,
       eventId,
+      createdById: adminUser.id,
     },
     select: {
       id: true,

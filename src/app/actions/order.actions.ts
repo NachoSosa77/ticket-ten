@@ -1,7 +1,7 @@
 "use server";
 
 import { buildCheckoutFormSchema } from "@/features/checkout/forms/checkoutForm.schema";
-import { getCurrentBuyerUser } from "@/lib/auth/session";
+import { getCurrentBuyerUser, requireAdminUser } from "@/lib/auth/session";
 import { generateOrderCode } from "@/lib/order-code";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
@@ -349,8 +349,27 @@ export async function cancelOrderAction(
   sessionId: number,
   orderId: number,
 ) {
+  const adminUser = await requireAdminUser(
+    `/admin/eventos/${eventId}/funciones/${sessionId}/ordenes`,
+  );
+
   try {
     await prisma.$transaction(async (tx) => {
+      const session = await tx.eventSession.findFirst({
+        where: {
+          id: sessionId,
+          eventId,
+          createdById: adminUser.id,
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      if (!session) {
+        throw new Error("No autorizado para operar esta función");
+      }
+
       const order = await tx.order.findFirst({
         where: {
           id: orderId,

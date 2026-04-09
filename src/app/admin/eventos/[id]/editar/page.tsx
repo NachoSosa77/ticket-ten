@@ -1,4 +1,5 @@
 import EventEditForm from "@/features/events/forms/EventEditForm";
+import { requireAdminUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -8,6 +9,7 @@ type PageProps = {
 };
 
 export default async function EditEventPage({ params }: PageProps) {
+  const adminUser = await requireAdminUser("/admin/eventos");
   const { id } = await params;
   const eventId = Number(id);
 
@@ -15,8 +17,8 @@ export default async function EditEventPage({ params }: PageProps) {
     notFound();
   }
 
-  const event = await prisma.event.findUnique({
-    where: { id: eventId },
+  const event = await prisma.event.findFirst({
+    where: { id: eventId, createdById: adminUser.id },
     select: {
       id: true,
       title: true,

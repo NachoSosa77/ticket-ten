@@ -1,6 +1,7 @@
 "use server";
 
 import { eventSessionFormSchema } from "@/features/events/forms/eventSessionForm.schema";
+import { requireAdminUser } from "@/lib/auth/session";
 import { parseDatetimeLocal } from "@/lib/datetime";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
@@ -16,6 +17,10 @@ export async function createEventSessionAction(
   eventId: number,
   formData: FormData,
 ): Promise<CreateEventSessionActionState> {
+  const adminUser = await requireAdminUser(
+    `/admin/eventos/${eventId}/funciones/nueva`,
+  );
+
   const rawData = {
     venueName: formData.get("venueName"),
     startsAt: formData.get("startsAt"),
@@ -36,8 +41,8 @@ export async function createEventSessionAction(
     };
   }
 
-  const event = await prisma.event.findUnique({
-    where: { id: eventId },
+  const event = await prisma.event.findFirst({
+    where: { id: eventId, createdById: adminUser.id },
     select: { id: true, status: true },
   });
 
@@ -60,6 +65,7 @@ export async function createEventSessionAction(
     await prisma.eventSession.create({
       data: {
         eventId,
+        createdById: adminUser.id,
         venueName: parsed.data.venueName,
         startsAt: parseDatetimeLocal(parsed.data.startsAt),
         status: "SCHEDULED",
@@ -83,6 +89,10 @@ export async function updateEventSessionAction(
   sessionId: number,
   formData: FormData,
 ): Promise<CreateEventSessionActionState> {
+  const adminUser = await requireAdminUser(
+    `/admin/eventos/${eventId}/funciones/${sessionId}/editar`,
+  );
+
   const rawData = {
     venueName: formData.get("venueName"),
     startsAt: formData.get("startsAt"),
@@ -107,6 +117,7 @@ export async function updateEventSessionAction(
     where: {
       id: sessionId,
       eventId,
+      createdById: adminUser.id,
     },
     select: {
       id: true,
@@ -146,11 +157,14 @@ export async function cancelEventSessionAction(
   eventId: number,
   sessionId: number,
 ) {
+  const adminUser = await requireAdminUser("/admin/eventos");
+
   try {
     const session = await prisma.eventSession.findFirst({
       where: {
         id: sessionId,
         eventId,
+        createdById: adminUser.id,
       },
       select: {
         id: true,
@@ -181,11 +195,14 @@ export async function reactivateEventSessionAction(
   eventId: number,
   sessionId: number,
 ) {
+  const adminUser = await requireAdminUser("/admin/eventos");
+
   try {
     const session = await prisma.eventSession.findFirst({
       where: {
         id: sessionId,
         eventId,
+        createdById: adminUser.id,
       },
       select: {
         id: true,

@@ -1,4 +1,5 @@
 import OrderCancelAction from "@/features/orders/components/OrderCancelAction";
+import { requireAdminUser } from "@/lib/auth/session";
 import { formatEventDateTime } from "@/lib/datetime";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
@@ -51,6 +52,7 @@ export default async function OrdersBySessionAdminPage({
   params,
   searchParams,
 }: PageProps) {
+  const adminUser = await requireAdminUser("/admin/eventos");
   const { id, sessionId } = await params;
   const { success, error } = await searchParams;
   const successMessage = getSuccessMessage(success);
@@ -63,8 +65,8 @@ export default async function OrdersBySessionAdminPage({
     notFound();
   }
 
-  const event = await prisma.event.findUnique({
-    where: { id: eventId },
+  const event = await prisma.event.findFirst({
+    where: { id: eventId, createdById: adminUser.id },
     select: {
       id: true,
       title: true,
@@ -80,6 +82,7 @@ export default async function OrdersBySessionAdminPage({
     where: {
       id: parsedSessionId,
       eventId,
+      createdById: adminUser.id,
     },
     select: {
       id: true,
@@ -228,4 +231,3 @@ export default async function OrdersBySessionAdminPage({
     </div>
   );
 }
-

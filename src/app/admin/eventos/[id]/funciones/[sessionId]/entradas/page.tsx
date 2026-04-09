@@ -1,3 +1,4 @@
+import { requireAdminUser } from "@/lib/auth/session";
 import { formatEventDateTime } from "@/lib/datetime";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
@@ -28,6 +29,7 @@ export default async function TicketTypesPage({
   params,
   searchParams,
 }: PageProps) {
+  const adminUser = await requireAdminUser("/admin/eventos");
   const { id, sessionId } = await params;
   const { success } = await searchParams;
   const successMessage = getSuccessMessage(success);
@@ -38,8 +40,8 @@ export default async function TicketTypesPage({
     notFound();
   }
 
-  const event = await prisma.event.findUnique({
-    where: { id: eventId },
+  const event = await prisma.event.findFirst({
+    where: { id: eventId, createdById: adminUser.id },
     select: {
       id: true,
       title: true,
@@ -55,6 +57,7 @@ export default async function TicketTypesPage({
     where: {
       id: parsedSessionId,
       eventId,
+      createdById: adminUser.id,
     },
     select: {
       id: true,

@@ -1,4 +1,5 @@
 import EventSessionStatusActions from "@/features/events/components/EventSessionStatusActions";
+import { requireAdminUser } from "@/lib/auth/session";
 import { formatEventDate, formatEventDateTime } from "@/lib/datetime";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
@@ -52,6 +53,7 @@ export default async function EventSessionsPage({
   params,
   searchParams,
 }: PageProps) {
+  const adminUser = await requireAdminUser("/admin/eventos");
   const { id } = await params;
   const { success, error } = await searchParams;
   const successMessage = getSuccessMessage(success);
@@ -62,14 +64,17 @@ export default async function EventSessionsPage({
     notFound();
   }
 
-  const event = await prisma.event.findUnique({
-    where: { id: eventId },
+  const event = await prisma.event.findFirst({
+    where: { id: eventId, createdById: adminUser.id },
     select: {
       id: true,
       title: true,
       slug: true,
       status: true,
       sessions: {
+        where: {
+          createdById: adminUser.id,
+        },
         orderBy: {
           startsAt: "asc",
         },
@@ -79,6 +84,12 @@ export default async function EventSessionsPage({
           startsAt: true,
           status: true,
           createdAt: true,
+          createdBy: {
+            select: {
+              name: true,
+              email: true,
+            },
+          },
         },
       },
     },
@@ -151,6 +162,7 @@ export default async function EventSessionsPage({
               <th className="px-4 py-3 font-medium">Fecha y hora</th>
               <th className="px-4 py-3 font-medium">Lugar</th>
               <th className="px-4 py-3 font-medium">Estado</th>
+              <th className="px-4 py-3 font-medium">Creador</th>
               <th className="px-4 py-3 font-medium">Creada</th>
               <th className="px-4 py-3 font-medium">Acciones</th>
             </tr>
@@ -159,7 +171,7 @@ export default async function EventSessionsPage({
           <tbody>
             {event.sessions.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-4 py-6 text-center text-slate-500">
+                <td colSpan={6} className="px-4 py-6 text-center text-slate-500">
                   Este evento todavía no tiene funciones cargadas.
                 </td>
               </tr>
@@ -181,6 +193,10 @@ export default async function EventSessionsPage({
                     >
                       {session.status}
                     </span>
+                  </td>
+                  <td className="px-4 py-3 text-slate-500">
+                    <p className="text-slate-700">{session.createdBy.name}</p>
+                    <p className="text-xs">{session.createdBy.email}</p>
                   </td>
                   <td className="px-4 py-3 text-slate-500">
                     {formatEventDate(session.createdAt)}
